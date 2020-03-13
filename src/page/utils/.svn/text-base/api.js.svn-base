@@ -1,0 +1,227 @@
+import axios from 'axios'
+import qs from 'qs'
+const TIME_OUT_MS = 100 * 1000 // 默认请求超时时间
+const TIME_OUT_MSs = 100 * 1000 // 默认请求超时时间
+/*
+ * @param response 返回数据列表
+ */
+function handleResults (response) {
+  let remoteResponse = response.data
+  var result = {
+    success: false,
+    message: '',
+    status: [],
+    errorCode: '',
+    data: {
+      total: 0,
+      results: []
+    }
+  }
+  if (remoteResponse.success) {
+    result.data.results = remoteResponse.data
+    result.data.total = remoteResponse.total
+    result.success = true
+  }
+  if (!remoteResponse.success) {
+    let code = remoteResponse.errorCode
+    if (code === 400) {
+      console.log('传参错误')
+    }
+    result.errorCode = remoteResponse.errorCode
+    result.message = remoteResponse.message
+  }
+  return result
+
+}
+
+function handleUrl (url) {
+  url = 'https://www.gzyixinglong.com/yxlwshop-pc' + url
+  // url = 'http://118.123.245.227:8091/yxlwshop-pc' + url
+  // url = 'http://localhost:8090/yxlwshop_pc' + url
+// BASE_URL是接口的ip前缀，比如http:10.100.1.1:8989/
+  return url
+}
+//如果同一个项目有不同的请求地址，也可以在这里添加，页面请求的时候对应下面的posts方法，posts方法里执行的地址是handleUrls方法里的
+function handleUrls (url) {
+  url = 'http://192.168.1.6:8080/diancan' + url
+// BASE_URL是接口的ip前缀，比如http:10.100.1.1:8989/
+  return url
+}
+/*
+ * @param data 参数列表
+ * @return
+ */
+function handleParams (data) {
+  return data
+}
+export default {
+  /*
+   * @param url
+   * @param data
+   * @param response 请求成功时的回调函数
+   * @param exception 异常的回调函数
+   */
+  post (url, data, response, exception) {
+    axios({
+      method: 'post',
+      url: handleUrl(url),
+      data: handleParams(data),
+      timeout: TIME_OUT_MS,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    }).then(
+      (result) => {
+        response(result)
+      }
+    ).catch(
+      (error) => {
+        if (exception) {
+          exception(error)
+          console.log(store.state.token)
+        } else {
+          console.log(error)
+        }
+      }
+    )
+  },
+  posts (url, data, response, exception) {
+    axios({
+      method: 'post',
+      url: handleUrls(url),
+      data: handleParams(data),
+      timeout: TIME_OUT_MS,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    }).then(
+      (result) => {
+        response(result)
+      }
+    ).catch(
+      (error) => {
+        if (exception) {
+          exception(error)
+        } else {
+          console.log(error)
+        }
+      }
+    )
+  },
+  /*
+   * get 请求
+   * @param url
+   * @param response 请求成功时的回调函数
+   * @param exception 异常的回调函数
+   */
+
+  // response(handleResults(result))
+  get (url, response, exception) {
+    axios({
+      method: 'get',
+      url: handleUrl(url),
+      timeout: TIME_OUT_MS,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8'
+      }
+    }).then(
+      (result) => {
+        response(handleResults(result))
+      }
+    ).catch(
+      (error) => {
+        if (exception) {
+          exception(error)
+        } else {
+          console.log(error)
+        }
+      }
+    )
+  },
+  /*
+   * 导入文件
+   * @param url
+   * @param data
+   * @param response 请求成功时的回调函数
+   * @param exception 异常的回调函数
+   */
+  uploadFile (url, data, response, exception) {
+    axios({
+      method: 'post',
+      url: handleUrl(url),
+      data: handleParams(data),
+      headers: {'Content-Type': 'multipart/form-data'},
+    }).then(
+      (result) => {
+        response(handleResults(result, data))
+      }
+    ).catch(
+      (error) => {
+        if (exception) {
+          exception(error)
+        } else {
+          console.log(error)
+        }
+      }
+    )
+  },
+  /*
+   * 下载文件用，导出 Excel 表格可以用这个方法
+   * @param url
+   * @param param
+   * @param fileName 如果是导出 Excel 表格文件名后缀最好用.xls 而不是.xlsx，否则文件可能会因为格式错误导致无法打开
+   * @param exception 异常的回调函数
+   */
+  downloadFile (url, data, fileName, exception) {
+    axios({
+      method: 'post',
+      url: handleUrl(url),
+      data: handleParams(data),
+      responseType: 'blob'
+    }).then(
+      (result) => {
+        const excelBlob = result.data
+        if ('msSaveOrOpenBlob' in navigator) {
+          // Microsoft Edge and Microsoft Internet Explorer 10-11
+          window.navigator.msSaveOrOpenBlob(excelBlob, fileName)
+        } else {
+          const elink = document.createElement('a')
+          elink.download = fileName
+          elink.style.display = 'none'
+          const blob = new Blob([excelBlob])
+          elink.href = URL.createObjectURL(blob)
+          document.body.appendChild(elink)
+          elink.click()
+          document.body.removeChild(elink)
+        }
+      }
+    ).catch(
+      (error) => {
+        if (exception) {
+          exception(error)
+        } else {
+          console.log(error)
+        }
+      }
+    )
+  },
+  uploadFileFormData (url, data, response, exception) {
+    axios({
+      method: 'post',
+      url: handleUrl(url),
+      data: data,
+      timeout: TIME_OUT_MS,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }).then(
+      (result) => {
+        response(handleResults(result))
+      }
+    ).catch(
+      (error) => {
+        if (exception) {
+          exception(error)
+        } else {
+          console.log(error)
+        }
+      }
+    )
+  }
+}

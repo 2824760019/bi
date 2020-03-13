@@ -1,0 +1,361 @@
+<template>
+  <div>
+    <Header></Header>
+    <div class="block">
+      <div class="main clearfix">
+        <nav class="nav clearfix">
+          <ul class="nav_right clearfix">
+            <li><router-link to="/Index"><img src="../../assets/img/logos.png"/></router-link></li>
+            <li>收藏夹</li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="common_banner">
+      <div class="banner_img">
+        <img src="../../assets/img/lunbo1.png" alt="">
+      </div>
+    </div>
+    <div class="banner">
+      <div class="banner_box clearfix" v-if="items.length>0">
+        <span class="all_choose"><label  class="radio" >
+                <span class="radio-bg"></span>
+                <input type="checkbox" name="land"  @click="allChecked" :checked="checkedNames.length===items.length"/>
+                <span class="radio-on"></span>
+              </label>全选
+          <span style="margin-left: 20px;cursor: pointer" @click="delCollection"><i class="icon iconfont icon-shanchu" style="margin-right: 5px;font-size: 20px"></i>删除</span>
+        </span>
+        <div class="fr banner_right">
+          <input type="text" placeholder="可在此输入搜索内容" v-model="searchTxt">
+          <i class="icon iconfont icon-sousuo" @click="searchs"></i>
+        </div>
+      </div>
+    </div>
+    <div class="solution_details">
+      <ul class="details_box clearfix" v-if="items.length>0">
+        <li v-for="item in items">
+          <router-link :to="{ path:'/productDeatils', query: {id: item.goods_id} }">
+            <div>
+              <img :src="ports.gwimgurl+item.goods_pic" alt="">
+            </div>
+            <p class="clearfix"><span>{{item.goods_name}}</span><span>¥{{item.goods_price}}</span></p>
+          </router-link>
+          <div class="chooses">
+            <label  class="radio" >
+              <span class="radio-bg"></span>
+              <input type="checkbox" name="land" v-model="checkedNames" :id="'id'+item.goods_id" :value="item.goods_id" />
+              <span class="radio-on"></span>
+            </label>
+          </div>
+        </li>
+      </ul>
+      <div v-else style="text-align: center;line-height: 80px;font-size: 20px">暂无数据!</div>
+      <div class="pages" v-if="pages>1">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          layout="prev, pager, next"
+          prev-text="上一页"
+          next-text="下一页"
+          :total="count"
+        >
+        </el-pagination>
+      </div>
+    </div>
+    <commons></commons>
+  </div>
+</template>
+
+<script>
+  import commons from '../../components/commons'
+  import Header from '../../components/Header'
+  import banner from '../../components/banner'
+  var qs = require('qs');
+  export default {
+    name: "",
+    data(){
+      return{
+        auth:'',
+        authid:'',
+        checkedNames: [],
+        searchTxt:'',
+        changeStyle:0,
+        pageSize :2, //每页显示20条数据
+        currentPage : 1, //当前页码
+        changePage : '', //总记录数
+        count : 0, //总记录数
+        pages : 0,
+        items : [],
+      }
+    },
+    created(){
+      this.auth=window.localStorage.getItem('token')
+      this.authid=window.localStorage.getItem('userid')
+    },
+    inject: ['reload'],
+    methods:{
+      searchs(){
+        this.searchTxt=this.searchTxt.replace(/\s+/g, "")
+        this.getData()
+      },
+      //删除
+      delCollection(){
+        var items = this.items;
+        var checkedNames = this.checkedNames;
+        /*循环查找选中项*/
+        var ids = "";
+        checkedNames.forEach((item,index)=> {
+          items.forEach( (items,i)=>{
+            if(items.goods_id==item){
+              ids += items.goods_id + ","
+              // items.splice(i,1);
+            }
+          });
+        })
+        if (ids=='') {
+          this.$alert('您没有选中要删除的数据！', {
+            confirmButtonText: '确定',
+          });
+        }else{
+          this.$confirm('确认删除?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.http.post(this.ports.manage.delete, qs.stringify({
+              goods_id:ids,
+              token: this.auth,
+              userid: this.authid
+            }), res => {
+              if (res.data.result=="1") {
+                this.$notify({
+                  title: "删除成功",
+                });
+                this.reload();
+              }else{
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          });
+        }
+        this.items=items;
+        this.checkedNames=[]
+      },
+      //全选
+      allChecked (){
+        if (this.checkedNames.length === this.items.length) {
+          // 全不选
+          this.checkedNames = [];
+        } else {
+          this.checkedNames = [];
+          // 全选
+          this.items.forEach(  (item) =>{
+            this.checkedNames.push(item.goods_id); // 与checkbox的value统一
+          })
+        }
+      },
+      handleSizeChange(val) {
+      },
+      handleCurrentChange(val) {
+        this.currentPage=val
+        this.getData()
+      },
+      getData(){
+        this.http.post(this.ports.manage.collectionlist, qs.stringify({
+          search:this.searchTxt,
+          currentPage:this.currentPage,
+          showCount:this.pageSize,
+          token: this.auth,
+          userid: this.authid
+        }), res => {
+          this.count = res.data.page.totalResult
+          this.pages=Math.ceil(this.count/this.pageSize)
+          this.items=res.data.list
+        }, function (error) {
+          this.$notify({
+            title: "请求失败",
+          });
+        })
+      }
+    },
+    mounted(){
+      this.getData()
+    },
+    components:{
+      commons,Header,banner
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .block{
+    width: 100%;
+    height: 80px;
+    background: #04110E;
+    line-height: 80px;
+    position: fixed;
+    top: 50px;
+    z-index: 9999;
+    .main{
+      width: 1200px;
+      margin: auto;
+      li{
+        float: left;
+      }
+      li:last-child{
+        margin-left: 100px;
+        color: #00C9A1;
+        font-size: 24px;
+      }
+    }
+  }
+  .banner_img{
+    img{
+      width: 100%;
+      height: 460px;
+    }
+  }
+  .banner{
+    width: 100%;
+    .banner_box{
+      width: 1200px;
+      height: 80px;
+      margin: auto !important;
+      .banner_right{
+        margin-top: 21px;
+        margin-right: 10px;
+        position: relative;
+        input{
+          width: 344px;
+          height: 40px;
+          border-radius: 20px;
+          border:1px solid #CCCCCC;
+          text-indent: 20px;
+        }
+        i{
+          position: absolute;
+          top: 10px;
+          right: 20px;
+          font-size: 16px;
+          color: #00C9A1;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+  .solution_details{
+    width: 100%;
+    background: #f5f5f5;
+    padding-bottom: 30px;
+    .details_box{
+      width: 1200px;
+      margin: auto !important;
+      li{
+        position: relative;
+        float: left;
+        background: white;
+        margin-left: 28px;
+        margin-top: 28px;
+        img{
+          width: 278px;
+          height: 238px;
+        }
+        p{
+          color: #191919;
+          font-size: 16px;
+          line-height: 48px;
+          padding:0 12px 12px;
+          :last-child{
+            float: right;
+            color: #EEAF06;
+          }
+        }
+        b{
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: inline-block;
+          width: 30px;
+          height: 30px;
+          text-align: center;
+          line-height: 30px;
+          color: #fff;
+          cursor: pointer;
+          background: #E53B3B;
+          border-radius: 50%;
+        }
+      }
+      :first-child,:nth-child(5){
+        margin-left: 0;
+      }
+    }
+  }
+  /*选择*/
+  .radio{
+    display: inline-block;
+    position: relative;
+    line-height: 20px;
+    cursor: pointer;
+  }
+  .radio input{
+    display: none;
+  }
+  .radio .radio-bg{
+    display: inline-block;
+    height: 55px;
+    width: 55px;
+    margin-left: 55px;
+    padding: 0;
+    vertical-align: top;
+    background-image: url('../../assets/img/xuan1.png');
+    background-size: 55px 55px;
+    cursor: pointer;
+  }
+  .radio .radio-on{
+    display: none;
+  }
+  .radio input:checked + span.radio-on{
+    width: 55px;
+    height: 55px;
+    position: absolute;
+    top: 0px;
+    background-image: url('../../assets/img/xuan.png');
+    background-size: 55px 55px;
+    display: inline-block;
+  }
+  .chooses{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+  }
+  .all_choose{
+    font-size: 16px;
+    color: #191919;
+    line-height: 80px;
+    .radio .radio-bg{
+      margin-right: 5px;
+      margin-left: 0px;
+    }
+    .radio .radio-bg{
+      width: 16px;
+      height: 16px;
+      background-image: url('../../assets/img/xuan2.png');
+      background-size: 16px 16px;
+    }
+    .radio input:checked + span.radio-on{
+      width: 16px;
+      height: 16px;
+      background-image: url('../../assets/img/xuan3.png');
+      background-size: 16px 16px;
+    }
+  }
+  .pages{
+    margin-top: 20px;
+  }
+</style>

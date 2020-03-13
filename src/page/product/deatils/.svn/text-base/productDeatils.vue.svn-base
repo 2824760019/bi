@@ -1,0 +1,721 @@
+<template>
+  <div>
+    <Header></Header>
+    <banner></banner>
+    <div class="product">
+      <div class="common_banner">
+        <div class="banner_img">
+          <img src="../../../assets/img/lunbo1.png" alt="">
+        </div>
+      </div>
+      <div class="solution_details clearfix">
+        <div class="details_contents clearfix">
+          <div class="product_carousel">
+            <div class="big_img"><img :src="ports.gwimgurl+picUrl" alt=""></div>
+            <div class="menu-block">
+              <swiper :options="menuListOption" ref="menuListSwiper">
+                <swiper-slide v-for="(item,index) in menuItems" :key="index" :data-id="index"
+                              :style="{backgroundImage:'linear-gradient(135deg,'+item+','+item+')'}">
+                  <div v-if="menuItems.length>0" class="double-text">
+                    <img :src="ports.gwimgurl+item" alt="" @click="changeImg(item)">
+                  </div>
+                </swiper-slide>
+                <div class="swiper-button-prev" slot="button-prev"></div>
+                <div class="swiper-button-next" slot="button-next"></div>
+              </swiper>
+            </div>
+          </div>
+          <div class="product_deatil">
+            <h5>{{goodsData.goods_name}}</h5>
+            <p>{{goodsData.goods_title}}</p>
+            <p>价格:&nbsp;&nbsp;<span>¥{{goodsData.goods_price}}</span></p>
+            <div><router-link :to="{ path:'/settlement', query: {id: this.id} }"><button style="background: #E53B3B">立即购买</button></router-link><button @click="collection" :class="[shoucang=='收藏'?'shoucangbg1':'shoucangbg2']">{{shoucang}}&nbsp;&nbsp;<i class="icon iconfont icon-xing"></i></button></div>
+          </div>
+        </div>
+        <div class="information clearfix">
+          <div class="information_left">
+            <div v-for="item in goodsList" @click="chooseDeatil(item.id)" style="cursor: pointer">
+                <div>
+                  <!--<img :src="ports.gwimgurl+item.pic" alt="">-->
+                  <img :src="ports.gwimgurl+item.pic.split(',')[0] " alt="">
+                </div>
+                <p class="clearfix"><span>{{item.name}}</span><span>¥{{item.price}}</span></p>
+            </div>
+          </div>
+          <div class="information_right">
+            <div class="information_right_title"><span>详情信息</span></div>
+            <div class="information_right_content" >
+              <!--<div v-for="item in urls" style="padding-bottom: 10px">-->
+                <!--<img :src="item" alt="">-->
+              <!--</div>-->
+              <div v-html="items" style="padding-bottom: 10px">
+                {{items}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <commons></commons>
+    </div>
+  </div>
+</template>
+
+<script>
+  import commons from '../../../components/commons'
+  import banner from '../../../components/banner'
+  import Header from '../../../components/Header'
+  import { setTimeout } from 'timers'; //setTimeout 所在库，不引用会报错
+  import { debug } from 'util'; //debug模式，代码调试语句debugger;  这个库不引用会报错
+  var qs = require('qs');
+  export default {
+    name: "",
+    data(){
+      const vm = this; // 很重要，不然在swiper插件的事件里拿不到vue的实例对象
+      return{
+        isShowWrap: false,
+        menuListSwiper: '',
+        items: '',
+        menuContentSwiper: '',
+        isSwipe: false, // 自定义变量，区分是否是滑动触发，onReachEnd事件需要用到，因为onReachBeginning/End 事件在组件初始化的时候会被执行，不知道为毛。
+        pageSize: 10,
+        menuListOption: {
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev'
+          },
+          slidesPerView: 'auto',
+          spaceBetween: 9,
+          on: {
+            init: function() {},
+            tap: function(event) {
+              if (this.clickedIndex != undefined) {
+                vm.theIndexSlideTo = this.clickedIndex;
+                vm.menuItemIdClicked = this.clickedSlide.dataset.id;
+                vm.menuContentSwiper.slideTo(this.clickedIndex);
+              }
+            }
+          }
+        },
+        menuContentOption: {
+          direction: 'vertical',
+          spaceBetween: 0
+        },
+        menuDetailOption: {
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev'
+          },
+          on: {
+            touchStart: function() {
+              vm.isSwipe = true;
+            },
+            reachEnd: function() {
+              if (vm.isSwipe) {
+                //获取上下滑动的那个swiper
+                let menuContentSwiper = vm.menuContentSwiper;
+                //获取上下滑动的那个swiper当前slide是哪一个，即获取activeIndex
+                let mcActiveIndex = menuContentSwiper.activeIndex;
+                //获取roleId
+                let roleId = menuContentSwiper.slides[mcActiveIndex].dataset.id;
+                //获取当前角色下的用户总数totalPage
+                let totalPage =
+                  menuContentSwiper.slides[mcActiveIndex].dataset.page;
+                let theItems = vm.menuContentItems[0][mcActiveIndex];
+                //如果已经加载了全部，则不继续请求，否则请求下一页
+                let theItemsLen=theItems.length;
+                if (theItemsLen < totalPage) {
+                  let pageIndex = theItemsLen / 10;
+                  vm.getUserByRole(roleId, pageIndex).then(data => {
+                    let userList=data.userList;
+                    //因为vue里面concat() 不会更新数组触发Dom更新，所以用Vue.set()循环合并新旧数组。
+                    for(let k=0;k<userList.length;k++){
+                      vm.$set(theItems,(theItemsLen+k),userList[k]);
+                    }
+                  });
+                }
+              }
+            }
+          }
+        },
+        windowHeight: '',
+        topMenuHeight: '', //顶部列表高度
+        menuContentHeight: '', //除列表外的视口中间这部分高度
+        menuItems: [
+        ],
+        theIndexSlideTo: '', //顶部菜单被点击的slide的index
+        menuItemIdClicked: '', //顶部菜单被点击的角色id
+        menuContentItems: [], //二元数组，每个角色对应一个数组元素
+        picUrl:'',
+        auth:'',
+        authid:'',
+        goodsData:'',
+        goodsList:'',
+        shoucang:'收藏',
+        urls:[],
+        id:'',
+        calleft:0
+      }
+    },
+    created(){
+      this.auth=window.localStorage.getItem('token')
+      this.authid=window.localStorage.getItem('userid')
+      this.id = this.$route.query.id;
+    },
+    inject: ['reload'],
+    methods:{
+      changeImg(val){
+        this.picUrl=val
+      },
+      chooseDeatil(val){
+        this.id=val
+        this.getDeatils()
+      },
+      getDeatils(){
+          this.http.post(this.ports.manage.goodsInfo, qs.stringify({
+            goodId: this.id,
+            token: this.auth,
+            userid: this.authid
+          }), res => {
+            console.log(res)
+            this.goodsData = res.data.goodsData
+            var b=this.goodsData.goods_detail.replace(new RegExp('/yxlwshop-upload', 'g'), 'https://www.gzyixinglong.com/yxlwshop-upload');
+            console.log(b)
+            b=b.replace(new RegExp('img', 'g'), "img style='width:800px'")
+            // console.log(this.goodsData.goods_detail.replace(/yxlwshop-upload/g, "https://www.gzyixinglong.com/yxlwshop-upload"));
+this.items=b
+
+            // var imgReg = /<img.*?(?:>|\/>)/gi;
+            // var srcReg = /src=[\'\"]?([^\'\"]*)[\'\"]?/i;
+            // var arr = this.goodsData.goods_detail.match(imgReg);  // arr 为包含所有img标签的数组
+            // // console.log(arr)
+            // for (var i = 0; i < arr.length; i++) {
+            //   var src = arr[i].match(srcReg);
+            //   //获取图片地址
+            //   // console.log('图片地址'+(i+1)+'：'+src[1]);
+            //   // console.log('https://www.gzyixinglong.com'+src[1]);
+            //   this.urls.push('https://www.gzyixinglong.com'+src[1])
+            // }
+            // // console.log(this.urls)
+
+            this.menuItems = res.data.goodsData.goods_pic.split(',')
+            this.picUrl =this.menuItems[0]
+            if (this.goodsData.collectionnum=='0') {
+              this.shoucang='收藏'
+            }else if (!this.goodsData.collectionnum) {
+              this.shoucang='收藏'
+            }else{
+              this.shoucang='取消收藏'
+            }
+            this.goodsList = res.data.goodsList
+          }, function (error) {
+            this.$notify({
+              title: "请求失败",
+            });
+          })
+      },
+      collection(){
+         if (!window.localStorage.getItem('token')){
+          // this.$router.push('/login')
+           this.$router.push({
+             path: '/login',
+             query: {
+               state: 1
+             }
+           })
+        }else{
+           if (this.shoucang=='取消收藏') {
+             this.http.post(this.ports.manage.delete, qs.stringify({
+               goods_id: this.id,
+               token: this.auth,
+               userid: this.authid
+             }), res => {
+               if (res.data.result=="1") {
+                 this.reload();
+               }else{
+               }
+             }, function (error) {
+               this.$notify({
+                 title: "请求失败",
+               });
+             })
+           }else{
+             this.http.post(this.ports.manage.add, qs.stringify({
+               goodId: this.id,
+               token: this.auth,
+               userid: this.authid
+             }), res => {
+               if (res.data.result=="1") {
+                 this.reload();
+               }else{
+               }
+             }, function (error) {
+               this.$notify({
+                 title: "请求失败",
+               });
+             })
+           }
+         }
+      },
+    },
+    mounted(){
+      this.getDeatils()
+    },
+    components:{
+      commons,banner,Header
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .banner_img{
+    img{
+      width: 100%;
+      height: 460px;
+    }
+  }
+  .solution_details{
+    width: 100%;
+    background: #f5f5f5;
+    padding-top: 35px;
+    padding-bottom: 30px;
+    .details_contents{
+      width: 1200px;
+      height: 515px;
+      margin: auto !important;
+      background: white;
+      >div{
+        float: left;
+        margin: 40px 30px 15px;
+      }
+      .product_carousel{
+        width: 527px;
+      }
+    }
+    .information{
+      width: 1200px;
+      height: 515px;
+      padding-top: 20px;
+      margin: auto !important;
+      >div{
+        float: left;
+      }
+      .information_left{
+        width: 300px;
+        background: white;
+        padding-top: 40px;
+        margin-right: 30px;
+        div{
+          margin-top: 24px;
+          text-align: center;
+          img{
+            width: 258px;
+            height: 241px;
+          }
+          p{
+            text-align: left;
+            color: #191919;
+            font-size: 16px;
+            line-height: 48px;
+            padding:0 30px;
+            span:last-child{
+              float: right;
+              color: #EEAF06;
+            }
+          }
+        }
+      }
+      .information_right{
+        width: 870px;
+        padding: 30px;
+        background: white;
+        .information_right_title{
+          border-bottom: 1px solid #e5e5e5;
+          span{
+            display: inline-block;
+            width: 95px;
+            font-size: 16px;
+            line-height: 48px;
+            color: #00C9A1;
+            border-bottom:2px solid #00C9A1;
+          }
+        }
+        .information_right_content{
+          margin-top: 20px;
+          font-size: 16px;
+          line-height: 36px;
+           img{
+             width: 800px !important;
+           }
+        }
+      }
+    }
+  }
+  .product_deatil{
+    width: 550px;
+    h5{
+      color: #474747;
+      font-size: 30px;
+      line-height: 48px;
+      font-weight: 400;
+    }
+    p{
+      color: #a3a3a3;
+      font-size: 16px;
+      line-height: 30px;
+      span{
+        color: #EEAF06;
+        font-size: 40px;
+        line-height: 77px;
+      }
+    }
+    div{
+      margin-top: 20px;
+      button{
+        width: 116px;
+        height: 47px;
+        color: #fff;
+        font-size: 16px;
+        border-radius: 3px;
+      }
+      button:last-child{
+        margin-left: 20px !important;
+      }
+    }
+  }
+  .shoucangbg1{
+    background: #00C9A1;
+  }
+  .shoucangbg2{
+     background: #ccc;
+   }
+  .el-carousel__item h3 {
+    color: #475669;
+    font-size: 14px;
+    opacity: 0.75;
+    line-height: 150px;
+    margin: 0;
+  }
+
+  .el-carousel__item:nth-child(2n) {
+    background-color: #99a9bf;
+  }
+
+  .el-carousel__item:nth-child(2n+1) {
+    background-color: #d3dce6;
+  }
+</style>
+
+<style scoped lang="scss">
+  .wrap {
+  }
+  .top-menu {
+    padding-bottom: 1rem;
+  }
+  .big_img{
+    margin: auto;
+    width: 527px;
+    height: 373px;
+    img{
+      width: 527px;
+      height: 373px;
+      margin-bottom: 15px;
+    }
+  }
+  .menu-block {
+    margin: auto;
+    width: 220px;
+    height: 80px;
+    line-height: 80px;
+    cursor: pointer;
+    position: relative;
+    img{
+      width: 66px;
+      height: 66px;
+    }
+  }
+  .header {
+    margin: 0;
+    line-height: 2.625rem;
+    font-size: 0.875rem;
+    color: #000;
+    padding: 0 5%;
+  }
+  .menu-block .swiper-container {
+    margin: 0 8px;
+    position: static;
+  }
+  .single-text {
+    line-height: 2.813rem;
+  }
+  .double-text {
+    width: 70px !important;
+    height: 70px !important;
+    text-align: center !important;
+    line-height: 70px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+  .double-text > span {
+    display: block;
+  }
+  .menu-block .swiper-button-prev,
+  .menu-block .swiper-button-next {
+    width: 0;
+    height: 0;
+    background-image: none;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+    margin-top: 0;
+    outline: 0;
+  }
+  .swiper-slide{
+    width: 70px !important;
+    height: 70px !important;
+    margin-right: 0 !important;
+  }
+  .menu-block .swiper-button-prev {
+    border-width: 0.563rem 0.563rem 0.563rem 0;
+    border-style: solid;
+    margin-left: -50px;
+    border-color: transparent #ccc transparent transparent;
+  }
+  .menu-block .swiper-button-next {
+    border-width: 0.563rem 0 0.563rem 0.563rem;
+    border-style: solid;
+   margin-right: -50px;
+    border-color: transparent transparent transparent #ccc;
+  }
+</style>
+
+<style scoped>
+  .content {
+    background-color: #e9e9e9;
+  }
+  .content .swiper-container {
+    width: 100%;
+    height: 100%;
+  }
+  .mc-top {
+    padding: 0 5% 0.74rem;
+    position: relative;
+  }
+  .mc-paddingtop {
+    padding-top: 1rem;
+  }
+  .icon-main {
+    display: inline-block;
+    border: 0.188rem solid #fff;
+    border-radius: 100%;
+    background-image: linear-gradient(135deg, green, yellow);
+    color: #fff;
+    font-size: 0.813rem;
+    width: 3.75rem;
+    height: 3.75rem;
+    text-align: center;
+    margin-right: 0.625rem;
+    position: relative;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+  }
+  .icon-main:after {
+    content: '';
+    width: 0.625rem;
+    height: 0.875rem;
+    background-color: #fff;
+    display: inline-block;
+    position: absolute;
+    bottom: -1rem;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    z-index: -1;
+  }
+  .icon-main > span {
+    display: block;
+  }
+  .icon-main-double {
+    line-height: 1.4rem;
+    -webkit-transform: translateY(0.5rem);
+    transform: translateY(0.5rem);
+  }
+  .icon-main-single {
+    line-height: 3.75rem;
+  }
+  .icon-sub {
+    display: inline-block;
+    border: 1px solid #333;
+    border-radius: 100%;
+    background-color: #fff;
+    color: #d0021b;
+    font-size: 0.813rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    line-height: 1.1rem;
+    padding: 0.438rem 0.625rem 0.813rem 0.625rem;
+    position: absolute;
+    left: 61.5%;
+    top: 0.625rem;
+    z-index: 1;
+  }
+  .mc-middle {
+    margin: 0 9%;
+    background-color: #fff;
+    border-radius: 0.25rem;
+    border: 1px solid #cfcfcf;
+  }
+  .the-desc {
+    color: #000;
+    font-size: 0.875rem;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    position: relative;
+  }
+  .the-desc > img {
+    border: 0;
+    display: block;
+    width: 100%;
+  }
+  .the-desc > span {
+    position: absolute;
+    top: 1.2rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 1rem;
+    z-index: 2;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 10;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .the-intro {
+    padding: 0.938rem 0;
+    position: relative;
+    height: 5rem;
+  }
+  .img-user,
+  .the-intro-block,
+  .the-erweima {
+    position: absolute;
+    top: 50%;
+    -webkit-transform: translate(0, -50%);
+    transform: translate(0, -50%);
+  }
+  .img-user {
+    width: 22%;
+    height: 61.1%;
+    left: 3%;
+    background-position: center center;
+    background-size: 100%;
+    border-radius: 100%;
+    border: 1px solid #efefef;
+  }
+  .the-intro-block {
+    width: 43%;
+    left: 28%;
+  }
+  .txt-name,
+  .txt-tel {
+    color: #333;
+    font-size: 0.875rem;
+    line-height: 1.4rem;
+    display: block;
+  }
+  .the-erweima {
+    width: 24%;
+    left: 73%;
+  }
+  .the-erweima > img {
+    border: 0;
+    display: block;
+    width: 100%;
+  }
+  .mc-bottom {
+    width: 0.625rem;
+    height: 22rem;
+    background-color: #fff;
+    display: inline-block;
+    position: absolute;
+    bottom: -1rem;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+  }
+  .md-wrap .swiper-button-prev,
+  .md-wrap .swiper-button-next {
+    /*background-image: url(../../../static/img/icon-jiantou.png) !important;*/
+    width: 0.875rem;
+    background-size: 0.875rem 2.75rem;
+  }
+  .md-wrap .swiper-button-next {
+    -webkit-transform: rotateY(180deg);
+    transform: rotateY(180deg);
+  }
+
+  @media screen and (max-width: 320px) {
+    .icon-sub {
+      left: 63%;
+    }
+    .the-desc > span {
+      padding: 0.9rem 0.75rem;
+    }
+  }
+  @media screen and (width: 375px) and (height: 812px) {
+    .icon-sub {
+      left: 61%;
+    }
+  }
+  @media screen and (min-width: 414px) {
+    .icon-sub {
+      left: 60.5%;
+    }
+    .img-user {
+      height: 67.5%;
+    }
+  }
+  @media screen and (min-width: 768px) {
+    .icon-sub {
+      left: 57%;
+    }
+  }
+</style>
+<style scoped>
+  .transform-icon {
+    position: fixed;
+    bottom: 5px;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    text-align: center;
+  }
+  @keyframes start {
+    0%,
+    30% {
+      opacity: 0;
+      -webkit-transform: translateY(10px) rotate(-90deg);
+      transform: translateY(10px) rotate(-90deg);
+    }
+
+    60% {
+      opacity: 1;
+      -webkit-transform: translate(0) rotate(-90deg);
+      transform: translate(0) rotate(-90deg);
+    }
+    100% {
+      opacity: 0;
+      -webkit-transform: translateY(-8px) rotate(-90deg);
+      transform: translateY(-8px) rotate(-90deg);
+    }
+  }
+  .transform-icon > img {
+    width: 1.2rem;
+    height: 1.6rem;
+    position: relative;
+    -webkit-animation: start 1.5s infinite ease-in-out;
+    animation: start 1.5s infinite ease-in-out;
+  }
+</style>

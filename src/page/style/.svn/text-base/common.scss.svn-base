@@ -1,0 +1,59 @@
+/*选择*/
+.radio{
+  display: inline-block;
+  position: relative;
+  line-height: 20px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.radio input{
+  display: none;
+}
+.radio .radio-bg{
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  margin-right: 5px;
+  padding: 0;
+  vertical-align: top;
+  background-image: url('../../assets/image/gou2.png');
+  background-size: 20px 20px;
+  cursor: pointer;
+}
+.radio .radio-on{
+  display: none;
+}
+.radio input:checked + span.radio-on{
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-image: url('../../assets/image/gou1.png');
+  background-size: 20px 20px;
+  display: inline-block;
+}
+/*上传图片*/
+.shangchuan{
+  margin-top: 12px !important;
+}
+.shangchuan div{
+  display: inline-block !important;
+  span{
+    vertical-align: top !important;
+    display: inline-block;
+    width: 100px;
+    line-height:16px;
+    text-align: right;
+    margin-right: 20px !important;
+  }
+  video{
+    width: 200px;
+    height: 200px;
+  }
+  img{
+    width: 100px;
+    height: 100px;
+  }
+}
+

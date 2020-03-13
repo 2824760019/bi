@@ -1,0 +1,31 @@
+.editor_message{
+  font-size: 16px;
+  line-height: 36px;
+  .editor_message_title{
+    color: #7f7f7f;
+    a{
+      color: #7f7f7f;
+    }
+  }
+  .editor_message_content{
+    text-align: center;
+    p{
+      color: #757575;
+      line-height: 36px;
+      font-size: 24px;
+      margin-top: 30px !important;
+    }
+    span{
+      color: #EEAF06;
+      font-size: 36px;
+      line-height: 50px;
+    }
+    .last{
+      margin-left: 0;
+      button:nth-child(2){
+        background: #EEAF06;
+        opacity: 1;
+      }
+    }
+  }
+}

@@ -1,0 +1,110 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+import login from '../page/login/Login'
+import Index from '../page/Index/Index'
+import solution from '../page/solution/solution'
+import product from '../page/product/product'
+import productDeatils from '../page/product/deatils/productDeatils'
+import contact from '../page/contact/contact'
+import personal from '../page/personal/personal'
+import message from '../page/personal/children/message'
+import editorMessage from '../page/personal/children/editorMessage'
+import changePassword from '../page/personal/children/changePassword'
+import order from '../page/personal/children/order'
+import balance from '../page/personal/children/balance'
+import integral from '../page/personal/children/integral'
+import mycoin from '../page/personal/children/mycoin'
+import preferential from '../page/personal/children/preferential'
+import address from '../page/personal/children/address'
+import systemMessage from '../page/personal/children/systemMessage'
+import collection from '../page/collection/collection'
+import settlement from '../page/settlement/settlement'
+import news from '../page/new/new'
+Vue.use(Router)
+const router= new Router({
+// export default new Router({
+  routes: [
+    {path: '/login', name: 'login', component: login},
+    {path: '/Index', name: 'Index', component: Index},
+    {path: '*', name: 'Index', component: Index},
+    {path: '/solution', name: 'solution', component: solution},
+    {path: '/news', name: 'news', component: news},
+    {path: '/contact', name: 'contact', component: contact},
+    {path: '/collection', name: 'collection', component: collection,meta: {requireAuth: true}},
+    {path: '/product', name: 'product', component: product},
+    {path: '/productDeatils', name: 'productDeatils', component: productDeatils},
+    {path: '/settlement', name: 'settlement', component: settlement,meta: {requireAuth: true,}},
+    {path: '/personal', name: 'contact', component: personal,meta: {requireAuth: true,},
+      children: [{
+        path: '/message',
+        component: message,
+        meta: {requireAuth: true,}
+      },{
+        path: '/editorMessage',
+        component: editorMessage,
+        meta: {requireAuth: true,}
+      },{
+        path: '/changePassword',
+        component: changePassword,
+        meta: {requireAuth: true,}
+      },{
+        path: '/order',
+        component: order,
+        meta: {requireAuth: true,}
+      },{
+        path: '/order1',
+        component: order,
+        meta: {requireAuth: true,}
+      },{
+          path: '/order2',
+          component: order,
+          meta: {requireAuth: true,}
+        },{
+        path: '/order3',
+        component: order,
+        meta: {requireAuth: true,}
+      },{
+        path: '/balance',
+        component: balance,
+        meta: {requireAuth: true,}
+      },{
+        path: '/integral',
+        component: integral,
+        meta: {requireAuth: true,}
+      },{
+        path: '/mycoin',
+        component: mycoin,
+        meta: {requireAuth: true,}
+      },{
+        path: '/preferential',
+        component: preferential,
+        meta: {requireAuth: true,}
+      },{
+        path: '/address',
+        component: address,
+        meta: {requireAuth: true,}
+      },{
+        path: '/systemMessage',
+        component: systemMessage,
+        meta: {requireAuth: true,}
+      }]
+    },
+  ]
+})
+router.beforeEach((to, from, next) => {
+  if (to.meta.requireAuth) {  // 判断该路由是否需要登录权限
+    if (window.localStorage.getItem('token')) {  // 获取当前的token是否存在
+      next();
+    }
+    else {
+      next({
+        path: '/login',
+        query: {redirect: to.fullPath}  // 将跳转的路由path作为参数，登录成功后跳转到该路由
+      })
+    }
+  }
+  else {
+    next();
+  }
+})
+export default router

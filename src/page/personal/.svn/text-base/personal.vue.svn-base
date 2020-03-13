@@ -1,0 +1,168 @@
+<template>
+  <div>
+    <Header></Header>
+    <div class="block">
+      <div class="main clearfix">
+        <nav class="nav clearfix">
+          <ul class="nav_right clearfix">
+            <li><router-link to="/Index"><img src="../../assets/img/logos.png"/></router-link></li>
+            <li>个人中心</li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="product">
+      <div class="solution_details clearfix">
+        <div class="solution_content clearfix">
+          <div class="tabs">
+            <el-row style="height: 100%;">
+              <el-col :span="4"  style="min-height: 100%; background-color: #324057;">
+                <el-menu :default-active="defaultActive" style="min-height: 100%;" theme="dark" router>
+                  <el-submenu index="1">
+                    <div slot="title" class="title" @click="openMessage"><i class="icon iconfont icon-xingzhuang1"></i>个人信息</div>
+                    <el-menu-item index="editorMessage" class="mains">修改个人信息</el-menu-item>
+                    <el-menu-item index="changePassword" class="mains" >修改登录密码</el-menu-item>
+                  </el-submenu>
+                  <el-submenu index="2">
+                    <div slot="title" class="title" @click="openOrder"><i class="icon iconfont icon-xingzhuang2"></i>我的订单</div>
+                    <el-menu-item index="2-1" :route="{path: '/order1' }" class="mains">已完成</el-menu-item>
+                    <el-menu-item index="2-2" :route="{path: '/order2' }" class="mains">待付款</el-menu-item>
+                    <el-menu-item index="2-3" :route="{path: '/order3' }" class="mains">待收货</el-menu-item>
+                  </el-submenu>
+                  <el-menu-item index="balance" class="title" :route="{ path:'/balance', query: {userMessages: userMessages.ye} }"><i class="icon iconfont icon-xingzhuang3 iconcolor"></i>账户余额</el-menu-item>
+                  <el-menu-item index="integral" class="title" :route="{ path:'/integral', query: {userMessages: userMessages.integral} }"><i class="icon iconfont icon-xingzhuangkaobei1 iconcolor"></i>我的积分</el-menu-item>
+                  <el-menu-item index="mycoin" class="title" :route="{ path:'/mycoin', query: {userMessages: userMessages.long_coin} }"><i class="icon iconfont icon-xingzhuangkaobei iconcolor"></i>我的龙币</el-menu-item>
+                  <el-menu-item index="preferential" class="title"><i class="icon iconfont icon-xingzhuangkaobei"></i>优惠中心</el-menu-item>
+                  <el-menu-item index="address" class="title"><i class="icon iconfont icon-dizhi"></i>地址管理</el-menu-item>
+                  <!--<el-menu-item index="systemMessage" class="title"><i class="icon iconfont icon-xingzhuang iconcolor"></i>系统消息</el-menu-item>-->
+                </el-menu>
+              </el-col>
+            </el-row>
+          </div>
+          <div class="introduce">
+            <el-row>
+            <el-col :span="20" style="height: 100%;overflow: auto;">
+              <keep-alive>
+                <router-view></router-view>
+              </keep-alive>
+            </el-col>
+            </el-row>
+          </div>
+        </div>
+      </div>
+      <Footer></Footer>
+    </div>
+  </div>
+</template>
+
+<script>
+  import Footer from '../../components/Footer'
+  import Header from '../../components/Header'
+  var qs = require('qs');
+  export default {
+    name: "",
+    data(){
+      return{
+        auth:'',
+        authid:'',
+        userMessages:'',
+      }
+    },
+    created(){
+      // if (!window.localStorage.getItem('token')){
+      //   this.$router.push('/login')
+      // }
+      this.auth=window.localStorage.getItem('token')
+      this.authid=window.localStorage.getItem('userid')
+      this.http.post(this.ports.manage.userInfo, qs.stringify({
+        userid:this.authid,
+        token:this.auth,
+      }), res => {
+        this.userMessages=res.data
+      }, function (error) {
+        this.$notify({
+          title: "请求失败",
+        });
+      })
+    },
+    methods:{
+      openMessage(){
+        this.$router.push('/message',)
+      },
+      openOrder(){
+        this.$router.push('/order',)
+      },
+    },
+    computed: {
+      defaultActive: function(){
+        return this.$route.path.replace('/', '');
+      }
+    },
+    components:{
+      Footer,Header
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .active{
+    display: none;
+  }
+  .block{
+    width: 100%;
+    height: 80px;
+    background: #04110E;
+    line-height: 80px;
+    position: fixed;
+    top: 50px;
+    z-index: 9999;
+    .main{
+      width: 1200px;
+      margin: auto;
+      li{
+        float: left;
+      }
+      li:last-child{
+          margin-left: 100px;
+          color: #00C9A1;
+          font-size: 24px;
+      }
+    }
+  }
+  .solution_details{
+    width: 100%;
+    background: #f5f5f5;
+    padding-top: 35px;
+    padding-bottom: 30px;
+    margin-top: 130px;
+    .solution_content{
+      width: 1200px;
+      margin: auto;
+      >div{
+        float: left;
+      }
+      .tabs{
+        width: 190px;
+        height: 678px;
+        background: white;
+        .icon{
+          margin-right: 12px;
+          color: #00C9A1;
+        }
+        .iconcolor{
+          color: #EEAF06;
+        }
+      }
+      .introduce{
+        width: 1000px;
+        height: 678px;
+        padding-top: 10px;
+        padding-bottom: 30px;
+        padding-left: 30px;
+        background: white;
+        margin-left: 10px;
+      }
+    }
+  }
+</style>
+

@@ -1,0 +1,81 @@
+<template>
+  <div>
+    <Header></Header>
+    <banner></banner>
+    <div class="new_box">
+      <div class="new_content">
+        <h3>{{items.news_title}}</h3>
+        <p class="time">{{items.addtime}}</p>
+        <div v-html="items.news_content" class="deatils">
+          {{items.news_content}}
+        </div>
+      </div>
+    </div>
+    <commons></commons>
+  </div>
+</template>
+
+<script>
+  import commons from '../../components/commons'
+  import Header from '../../components/Header'
+  import banner from '../../components/banner'
+  var qs = require('qs');
+  export default {
+    name: "solution",
+    data(){
+      return{
+          items:''
+      }
+    },
+    created(){
+     var id=this.$route.query.id;
+      this.http.post(this.ports.manage.info, qs.stringify({
+        news_id:id
+      }), res => {
+        // console.log(res)
+        this.items=res.data
+      }, function (error) {
+        this.$notify({
+          title: "请求失败",
+        });
+      })
+    },
+    components:{
+      commons,Header,banner
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .new_box{
+    margin-top: 130px;
+    padding: 20px 0 46px 0 ;
+    background: #F5F5F5;
+    .new_content{
+      width: 1200px;
+      padding: 40px;
+      margin: auto;
+      background: #fff;
+      h3{
+        color: #333333;
+        font-size: 36px;
+        line-height: 48px;
+        font-weight: 500;
+      }
+      .time{
+        color: #808080;
+        font-size: 16px;
+        line-height: 48px;
+      }
+      .deatils{
+        font-size: 18px;
+        color: #666666;
+        line-height: 30px;
+        text-indent: 2em;
+        img{
+          margin: 10px 0;
+        }
+      }
+    }
+  }
+</style>

@@ -1,0 +1,43 @@
+export default {
+  manage: {
+    shopUserLogin: '/app/shopUserLogin', // 登录
+    shopUserRegistSendSms: '/app/shopUserRegistSendSms', // 用户注册-发送验证码
+    shopUserRegist: '/app/shopUserRegist', // 用户注册-提交
+    shopUserFindPwdSendSms: '/app/shopUserFindPwdSendSms', // 找回密码-发送验证码
+    shopUserFindPwd: '/app/shopUserFindPwd', // 找回密码-提交
+    typeList: '/app/solution/typeList', // 解决方案-类型列表数据
+    listCount: '/app/solution/listCount', // 解决方案-分页列表查询
+    index: '/app/index', // 首页数据提取
+    userInfo: '/app/userInfo', // 个人信息提取
+    bindingOldPhoneSendSms: '/app/bindingOldPhoneSendSms', // 绑定手机号-原绑定手机号发送验证码
+    bindingOldPhone: '/app/bindingOldPhone', // 绑定手机号-原绑定手机号验证码验证
+    bindingNewPhoneSendSms: '/app/bindingNewPhoneSendSms', // 绑定手机号-新绑定手机号发送验证码
+    bindingNewPhone: '/app/bindingNewPhone', // 绑定手机号-新绑定手机号
+    updateUserInfo: '/app/updateUserInfo', // 修改用户个人信息
+    updatePwd: '/app/updatePwd', // 修改登录密码
+    categoryListData: '/app/categoryListData', // 产品源码分类提取
+    goodsList: '/app/goodsList', // 产品源码分页列表查询
+    list: '/app/usercoupon/list', // 优惠中心-列表
+    userAddressList: '/app/userAddressList', // 地址管理-列表
+    orderList: '/app/orderList', // 我的订单
+    goodsInfo: '/app/goodsInfo', // 商品详情页数据
+    add: '/app/collection/add', // 商品收藏
+    delete: '/app/collection/delete', // 用户取消收藏
+    toorder: '/app/toorder', // 立即购买
+    addorder: '/app/addorder', // 提交订单
+    orderdelete: '/app/orderdelete', // 删除订单
+    orderStatus: '/app/orderStatus', // 根据订单id查询状态
+    getpaycode: '/app/getpaycode', // 获取支付二维码
+    collectionlist: '/app/collection/list', // 收藏列表
+    userAddressAdd: '/app/userAddressAdd', // 新增用户收货地址
+    userAddressUpdate: '/app/userAddressUpdate', // 修改用户收货地址
+    userAddressDelete: '/app/userAddressDelete', // 删除用户收货地址
+    login_out: '/app/login_out', // 首页
+    info: '/app/news/info', // 新闻详情
+    indexStartOrder: '/app/indexStartOrder',
+  },
+  gwimgurl:'https://www.gzyixinglong.com' + '/yxlwshop-upload',
+  // gwimgurl:'http://118.123.245.227:8089/yxlwshop-upload',
+  // payCode:'http://118.123.245.227:8091/yxlwshop-pc',
+  payCode:'https://www.gzyixinglong.com/yxlwshop-pc',
+}

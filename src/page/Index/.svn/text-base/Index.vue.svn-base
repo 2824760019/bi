@@ -1,0 +1,347 @@
+<template>
+  <div>
+    <Header></Header>
+    <banner></banner>
+    <div class="carousel">
+      <div class="weixin_code">
+        <ul class="clearfix">
+          <li>
+            <img src="../../assets/img/xcx.png" alt="" >
+            <p>微信小程序</p>
+          </li>
+          <li>
+            <img src="../../assets/img/gzh.png" alt="" >
+            <p>微信公众号</p>
+          </li>
+        </ul>
+      </div>
+    <el-carousel trigger="click" height="640px" arrow="never">
+    <el-carousel-item v-for="(item,index) in bannerUrl" :key="index">
+    <!--<img :src="ports.urlimg+item.image_url" alt="">-->
+      <img :src="ports.gwimgurl+item.ban_img" alt="">
+    </el-carousel-item>
+    </el-carousel>
+    </div>
+    <div id="article">
+      <div class="message">
+        <p class="base">我们的产品</p>
+        <p class="base_en">OUR PRODUCTS</p>
+        <ul class="base_message clearfix">
+          <li>
+              <div class="base_img"><img src="../../assets/img/apps.png" alt="" style="width: 138px;height: 278px"></div>
+              <div class="base_content">
+                <p>APP</p>
+                <p class="introduce">APP就是可以在安装在手机上的软件，完善原始系统的不足与个性化。</p>
+              </div>
+          </li>
+          <li>
+            <div class="base_img"><img src="../../assets/img/web.png" alt="" style="width: 300px;;height: 278px"></div>
+            <div class="base_content">
+              <p>WEB</p>
+              <p class="introduce">网页是构成网站的基本元素，是承载各种网站应用的平台。</p>
+            </div>
+          </li>
+          <li>
+            <div class="base_img"><img src="../../assets/img/xiaochengxu.png" alt="" style="width: 138px;height: 278px"></div>
+            <div class="base_content">
+              <p>小程序</p>
+              <p class="introduce">微信小程序，是一种不需要下载安装即可使用的应用。</p>
+            </div>
+          </li>
+        </ul>
+        <div class="more"><router-link to="/product"><button>查看更多</button></router-link></div>
+      </div>
+      <div class="scheme">
+        <p class="base">解决方案</p>
+        <p class="base_en" style="color: #dcdcdc">SOLUTION</p>
+        <div class="scheme_contents">
+          <el-carousel :interval="3000" type="card" height="695px" >
+            <el-carousel-item v-for="(item,index) in solutionData" :key="index">
+              <router-link to="/solution">
+                <img :src="ports.gwimgurl+item.picurl" alt="">
+                <h3>{{item.title}}</h3>
+                <!--<p style="text-align: center;font-size: 18px">{{item.typename}}</p>-->
+                <p class="scheme_introduce">{{item.content}}</p>
+                <p class="deatils">查看详情&nbsp;<i class="icon iconfont icon-icon--"></i></p>
+              </router-link>
+            </el-carousel-item>
+          </el-carousel>
+        </div>
+      </div>
+      <div class="message" style="padding-top: 65px">
+        <p class="base">合作伙伴</p>
+        <p class="base_en">COOPERATIVE PARTNER</p>
+        <div class="friend clearfix">
+          <div v-for="item in cooperation">
+            <img :src="ports.gwimgurl+item.picurl"  :title="item.title">
+          </div>
+        </div>
+      </div>
+      <div class="scheme">
+        <p class="base">行业新闻</p>
+        <p class="base_en" style="color: #dcdcdc">TRADE NEWS</p>
+        <div class="scheme_contents new_contents clearfix">
+          <div class="fl news_left">
+            <router-link to="/news">
+            <img :src="ports.gwimgurl+newData[0].pic" alt="">
+            <p class="clearfix"><span>{{newData[0].title}}</span><span>{{newData[0].time}}</span></p>
+            </router-link>
+          </div>
+          <ul class="fl news_right">
+            <li class="clearfix" v-for="item in newData">
+              <router-link :to="{ path:'/news', query: {id: item.id} }">
+                <span>{{item.title}}</span><span>{{item.time}}</span>
+              </router-link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <commons></commons>
+  </div>
+</template>
+<script>
+  import Header from '../../components/Header'
+  import banner from '../../components/banner'
+  import Footer from '../../components/Footer'
+  import commons from '../../components/commons'
+  var qs = require('qs');
+  export default {
+    data(){
+      return{
+        city:'',
+        bannerUrl:'',
+        solutionData:'',
+        newData:'',
+        cooperation:'',
+      }
+    },
+    created(){
+      this.http.post(this.ports.manage.index, qs.stringify({
+      }), res => {
+        console.log(res)
+        this.bannerUrl=res.data.bannerData
+        this.solutionData=res.data.solutionData
+        this.newData=res.data.newData
+        this.cooperation=res.data.partnerData
+      }, function (error) {
+        this.$notify({
+          title: "请求失败",
+        });
+      })
+    },
+    methods:{
+    },
+    mounted(){
+    },
+    components:{
+      Header,
+      Footer,
+      commons,
+      banner
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .carousel{
+    width: 100%;
+    height: 640px;
+    margin-top: 130px;
+    img{
+      width: 100%;
+      height: 640px;
+    }
+  }
+  #article{
+    margin-top: 40px;
+    .base{
+      text-align: center;
+      font-size: 40px;
+      color: #000000;
+    }
+    .base_en{
+      text-align: center;
+      font-size: 40px;
+      color: #e5e5e5;
+      line-height: 50px;
+      margin-bottom: 40px;
+      opacity: 0.2;
+    }
+    .more{
+      text-align: center;
+      margin-top: 74px;
+      margin-bottom: 38px;
+      button{
+        width: 116px;
+        height: 30px;
+        color: #00C9A1;
+        font-size: 16px;
+        border: 1px solid #00C9A1;
+        border-radius: 3px;
+      }
+    }
+    .base_message{
+      width: 1160px;
+      margin: 0 auto !important;
+      padding: 0 39px;
+      .base_content{
+        p:first-child{
+          font-size: 24px;
+          line-height: 48px;
+          color: #000000;
+        }
+        p:last-child{
+          font-size: 16px;
+          color: #7f7f7f;
+          line-height: 30px;
+        }
+      }
+      li{
+        text-align: center;
+        float: left;
+        padding: 20px;
+        width: 340px;
+        margin-right: 30px;
+        margin-top: 45px;
+        .base_img{
+          width: 300px;
+          overflow: hidden;
+        }
+      }
+      li:last-child{
+        margin-right: 0px;
+      }
+      li:hover{
+        -moz-box-shadow:0px 2px 3px #999; -webkit-box-shadow:0px 2px 3px #999; box-shadow:0px 2px 3px #999;
+      }
+    }
+  }
+.scheme{
+  width: 100%;
+  padding-top: 70px;
+  background: #F5F5F5;
+  .scheme_contents{
+    width: 1040px;
+    margin: auto;
+    margin-top: 50px;
+    .el-carousel__item{
+      background: white;
+    }
+    img{
+      width: 520px;
+      height: 420px;
+    }
+    h3{
+      font-size: 24px;
+      color: red;
+      line-height: 60px;
+      text-align: center;
+      font-weight: 200;
+    }
+    p{
+      color: #7f7f7f;
+      padding:0 20px;
+    }
+    .scheme_introduce{
+      margin-top: 20px !important;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      text-indent: 2em;
+    }
+    .deatils{
+      text-align: center;
+      margin-top: 25px !important;
+    }
+    i{
+      color: #00C9A1;
+      margin-top: 5px !important;
+    }
+  }
+}
+  .message{
+    width: 1200px;
+    margin: auto;
+    .friend{
+      margin-bottom: 60px !important;
+      >div{
+        width: 33%;
+        float: left;
+        height: 142px;
+        margin-top: 45px;
+      }
+        img{width: 100%;height: 142px;-webkit-filter: grayscale(100%); -moz-filter: grayscale(100%); -ms-filter: grayscale(100%); -o-filter: grayscale(100%); filter: grayscale(100%); filter: gray;}
+        img:hover{ transform:scale(1.2);-webkit-filter: grayscale(0); -moz-filter: grayscale(0); -ms-filter: grayscale(0); -o-filter: grayscale(0); filter: grayscale(0%); }
+    }
+  }
+  .new_contents{
+    width: 1200px !important;
+    >div{
+      width: 620px;
+    }
+    .news_left{
+      cursor: pointer;
+      img{
+        width: 620px;
+        height: 320px;
+      }
+      p{
+        color:#808080;
+        font-size: 16px;
+        line-height: 48px;
+        padding:0;
+      }
+    }
+    span:last-child{
+      float: right;
+    }
+    ul{
+      width: 519px;
+      margin-left: 60px !important;
+      margin-top: -22px !important;
+      li{
+        height: 57px;
+        width: 100%;
+        overflow: hidden;
+        cursor: pointer;
+        border-bottom: 1px solid #dfdfdf;
+        a{
+          display: inline-block;
+          height: 57px;
+          width: 100%;
+        }
+        span{
+          line-height: 57px;
+          color: #808080;
+        }
+      }
+      li:hover{
+        margin-left: 2px;
+         span{
+           line-height: 65px;
+           color: #00C9A1;
+         }
+      }
+    }
+  }
+  .carousel{
+    position: relative;
+  }
+  .weixin_code{
+    position: fixed;
+    z-index: 999;
+    top: 150px;
+    left: 20px;
+    li{width: 110px !important;
+      height: 110px !important;text-align: center;font-size: 14px;color: #fff;line-height: 40px;text-shadow:0px 0px 4px #000;}
+    li:last-child{
+      margin-top: 40px;
+    }
+    img{
+      width: 110px !important;
+      height: 110px !important;
+    }
+  }
+</style>

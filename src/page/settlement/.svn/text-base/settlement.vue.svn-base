@@ -1,0 +1,803 @@
+<template>
+  <div>
+    <Header></Header>
+    <div class="block">
+      <div class="main clearfix">
+        <nav class="nav clearfix">
+          <ul class="nav_right clearfix">
+            <li><router-link to="/Index"><img src="../../assets/img/logos.png"/></router-link></li>
+            <li>结算页</li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="product">
+      <div  class="binding">
+        <div class="clearfix">确认收货地址 <button @click="addAddress">+ 新增收货地址</button></div>
+        <table v-if="addrlist.length>0">
+          <tr>
+            <th>收货人</th>
+            <th>所在地区</th>
+            <th>详细地址</th>
+            <th>联系电话</th>
+            <th>管理</th>
+            <th>选择</th>
+          </tr>
+          <tr v-for="(item,index) in addrlist">
+            <td>{{item.addr_realname}}</td>
+            <!--str.replace(/\s*/g,"")-->
+            <td>{{item.addr_city.replace(/\s*/g,"")}} <span v-if="item.is_default == '1'" class="moren_address">默认地址</span><span v-else></span></td>
+            <td>{{item.address}}</td>
+            <td>{{item.addr_phone}}</td>
+            <td style="color: #00C9A1"><span @click="changeAddress(item)">修改</span></td>
+            <td>
+              <label  class="radio">
+              <span class="radio-bg"></span>
+              <input type="radio" name="address" @click="chooseAgreess(item)" :checked="item.is_default == '1'?true:false"/>
+              <span class="radio-on"></span>
+            </label>
+            </td>
+          </tr>
+        </table>
+        <p v-else>您还没有添过收货地址哦！</p>
+        <div style="margin-top: 50px">确认订单信息</div>
+        <ul class="order_list">
+          <li class="clearfix" v-for="item in orderList">
+            <div><img :src="ports.gwimgurl+item.goods_pic" alt=""></div>
+            <div>
+              <p>{{item.goods_name}}</p>
+              <p>发货时间：拍下即刻发货</p>
+              <p>¥{{item.goods_price}}</p>
+            </div>
+            <div></div>
+          </li>
+        </ul>
+        <div class="order_last clearfix">
+          <!--<div><span>给卖家留言: </span><textarea name=""  style="resize:none" ></textarea></div>-->
+          <div></div>
+          <div style="float: right">
+            <div class="clearfix"><span>商品金额</span><span class="rights">¥{{orderPrice}}</span></div>
+            <div class="clearfix"><span>运费</span><span class="rights">+¥ 0</span></div>
+            <div class="clearfix">
+              <span>优惠券折扣</span><i class="icon iconfont icon-Group- rights" @click="openPre" style="cursor: pointer"></i><span class="youhui" v-if="PreName!=''">{{PreName.coupon_name}}</span>
+                <div v-for="item in preferentialList" v-show="showPre">
+                  <p  @click="choosePre(item)" class="youhuijuan" v-if="orderPrice>item.use_price">{{item.coupon_name}}</p>
+                  <p v-else class="jinzhi">{{item.coupon_name}}</p>
+                </div>
+            </div>
+            <div class="clearfix">
+              <span>积分抵扣</span>
+              <span style="margin-left: 10px;color:#999999">100积分可抵扣10元，最多可抵{{integralS2}}积分</span>
+              <span style="margin-left: 10px;margin-right: -10px;color:#666666">-¥ {{integralS}}</span>
+              <span class="rights jifen">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <label  class="radio">
+              <span class="radio-bg"></span>
+              <input type="checkbox" name="jifen" @click="chooseAgrees($event)"/>
+              <span class="radio-on"></span>
+            </label></span>
+            </div>
+            <div class="clearfix"><span>实付金额</span><span class="rights money">¥{{orderPrice-youhuiPrice-integralS}}</span></div>
+            <div><button @click="payMoney">付款</button><button @click="$router.back(-1)">返回</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--付款-->
+    <div class="bgs" v-show="payWindow"></div>
+    <div class="addAddress" v-show="payWindow" style="width: 560px;height: 355px">
+      <p class="add_title" style="font-size:18px">订单提交成功，请尽快付款<span id="closeWindow" @click="closeWindow"><img src="../../assets/img/del.png" alt=""></span></p>
+      <div class="pay_code clearfix" v-if="paystatus==0">
+        <div>
+          <img :src="ports.payCode+ports.manage.getpaycode+'?order_id='+order_id+'&userid='+authid+'&token='+auth" alt="">
+        </div>
+        <div>
+          <p>微信支付</p>
+          <p>应支付金额 &nbsp;<span>{{orderPrice-youhuiPrice-integralS}}</span>&nbsp;元</p>
+        </div>
+      </div>
+      <div v-else style="text-align: center;font-size: 26px;margin-top: 80px">已完成支付 <br><span style="font-size: 18px"><b style="color: red">{{totalTime}}</b> s后自动跳转到订单页</span></div>
+    </div>
+    <!--地址-->
+    <div class="bgs" v-show="addWindow"></div>
+    <div class="addAddress" v-show="addWindow">
+      <p class="add_title">{{addressTitle}}收货地址<span  @click="closeWindow"><img src="../../assets/img/del.png" alt=""></span></p>
+      <div class="add_content">
+        <p>
+          <span>所在地区</span><b>*</b>
+          <v-distpicker @selected="onSelected" :province="province" :city="city" :area="area"></v-distpicker>
+        </p>
+        <p><span>详细地址</span><b>*</b><input type="text" placeholder="请输入详细地址" v-model="deatilAddress"></p>
+        <p><span>收货人姓名</span><b>*</b><input type="text" placeholder="请输入收货人姓名" v-model="names"></p>
+        <p><span>手机号码</span><b>*</b><input type="text" placeholder="请输入收货人手机号码" v-model="phones"></p>
+        <p class="defaults"><input type="checkbox" @click="chooseAgree($event)" v-model="defaults">&nbsp;设为默认收货地址</p>
+        <p style="line-height: 20px;margin-bottom: 0 !important;margin-left: 193px !important;color: red">{{tishi}}</p>
+        <div class="last"><button @click="saveAddress">保存</button></div>
+      </div>
+    </div>
+    <Footer></Footer>
+  </div>
+</template>
+
+<script>
+  import Footer from '../../components/Footer'
+  import Header from '../../components/Header'
+  import VDistpicker from 'v-distpicker'
+  import VueQr from 'vue-qr'
+  var reg = /^1(3[0-9]|4[57]|5[0-9]|66|7[135678]|8[0-9]|9[89])[0-9]{8}$/;
+  var qs = require('qs');
+  var clock,timer
+  export default {
+    name: "",
+    data(){
+      return{
+        auth:'',
+        authid:'',
+        orderList:'',
+        orderPrice:'',
+        youhuiPrice:'',
+        morenaddress1:'',
+        paystatus:'0',
+        showPre:false,
+        PreName:'',
+        coupon_id:'',
+        preferentialList:'',
+        integralS:'0',
+        integralS2:'0',
+        integralS1:'',
+        isuseintegral:0,
+        totalTime:3,
+        checkedAgree:'',
+        addWindow:false,
+        payWindow:false,
+        addressTitle:'新增',
+        addressID:'0',
+        addrlist:'新增',
+        tishi:'',
+        city:'',
+        province:'',
+        area:'',
+        deatilAddress:'',
+        names:'',
+        phones:'',
+        is_default:'',
+        address_id:'',
+        order_id:'',
+        defaults:false,
+        morenChoose:false,
+        id:'',
+        weixinCode:'',
+      }
+    },
+    created(){
+      this.id = this.$route.query.id;
+      if (!this.order_id){
+      } else{
+        this.payWindow=true
+      }
+      this.auth=window.localStorage.getItem('token')
+      this.authid=window.localStorage.getItem('userid')
+      this.http.post(this.ports.manage.userAddressList, qs.stringify({
+        token: this.auth,
+        userid: this.authid
+      }), res => {
+        this.addrlist=res.data.addrlist
+      }, function (error) {
+        this.$notify({
+          title: "请求失败",
+        });
+      })
+      this.http.post(this.ports.manage.toorder, qs.stringify({
+        goods_id:this.id,
+        attribute_detail_id:1,
+        goods_count:1,
+        userid:this.authid,
+        token:this.auth,
+      }), res => {
+        this.orderList=res.data.list
+        this.orderPrice=res.data.list[0].goods_price
+        this.morenaddress1=res.data.address
+        this.integralS2=res.data.pd.deduction_integral
+        this.integralS1=res.data.pd.deduction_integral
+        this.chooseAgreess(this.morenaddress1)
+      }, function (error) {
+        this.$notify({
+          title: "请求失败",
+        });
+      })
+      this.http.post(this.ports.manage.list, qs.stringify({
+        userid:this.authid,
+        token:this.auth,
+      }), res => {
+        this.preferentialList=res.data.list
+      }, function (error) {
+        this.$notify({
+          title: "请求失败",
+        });
+      })
+    },
+    inject: ['reload'],
+    methods:{
+      changeAddress(val){
+        var address=val.addr_city.split(" ");
+        this.province=address[0]
+        this.city=address[1]
+        this.area=address[2]
+        this.deatilAddress=val.address
+        this.names=val.addr_realname
+        this.phones=val.phones
+        this.phones=val.addr_phone
+        this.is_default=val.is_default
+        this.address_id=val.address_id
+        if (this.is_default=='1'){
+          this.defaults=true
+        }else {
+          this.defaults=false
+        }
+        this.addWindow=true
+        this.addressTitle='修改'
+      },
+      addAddress(){
+        if (this.addrlist.length>=6){
+          this.$alert('最多只能添加6栏收货地址！', {
+            confirmButtonText: '确定',
+          });
+        }else {
+          this.addWindow = true
+          this.addressTitle = '新增'
+        }
+      },
+      saveAddress(){
+        if (!this.area){
+          this.tishi='请选择完整的地址'
+        }else if(!this.deatilAddress){
+          this.tishi='请输入详细地址'
+        }else if(!this.names){
+          this.tishi='请输入收货人姓名'
+        }else if(!this.phones){
+          this.tishi='请输入收货人手机号码'
+        }else if (!reg.test(this.phones)) {//手机号不合法
+          this.tishi='您输入的手机号码不合法,请重新输入'
+        } else{
+          var url,citys
+          citys=this.province+' '+this.city+' '+this.area
+          if (this.addressTitle=='新增') {
+            url=this.ports.manage.userAddressAdd
+            this.http.post(url, qs.stringify({
+              is_default: this.is_default,
+              addr_realname: this.names,
+              addr_phone: this.phones,
+              address: this.deatilAddress,
+              addr_city: citys,
+              token: this.auth,
+              userid: this.authid
+            }), res => {
+              if (res.data.result=="1") {
+                // 刷新当前页面
+                this.reload();
+              }else{
+                this.tishi=res.data.message
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          }else{
+            url=this.ports.manage.userAddressUpdate
+            this.http.post(url, qs.stringify({
+              address_id: this.address_id,
+              is_default: this.is_default,
+              addr_realname: this.names,
+              addr_phone: this.phones,
+              address: this.deatilAddress,
+              addr_city: citys,
+              token: this.auth,
+              userid: this.authid
+            }), res => {
+              if (res.data.result=="1") {
+                // 刷新当前页面
+                this.reload();
+              }else{
+                this.tishi=res.data.message
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          }
+        }
+        window.setInterval(() => {
+          this.tishi=''
+        }, 5000)
+      },
+      onSelected(data) {
+        this.province=data.province.value
+        this.city=data.city.value
+        this.area=data.area.value
+      },
+      closeWindow(){
+        this.addWindow=false
+        this.payWindow=false
+        window.clearInterval(timer)
+        window.clearInterval(clock)
+      },
+      chooseAgree(e){
+        this.checkedAgree=e.target.checked
+        if (this.checkedAgree==true){
+          this.is_default=1
+        }else{
+          this.is_default=''
+        }
+      },
+      openPre(){
+        this.showPre=!this.showPre
+      },
+      choosePre(val){
+        this.showPre=false
+        this.PreName=val
+        this.youhuiPrice=val.coupon_price
+        this.coupon_id=val.coupon_id
+      },
+      chooseAgrees(e){
+        if (e.target.checked==true){
+          this.isuseintegral=1
+          this.integralS=this.integralS1/10
+        }else{
+          this.isuseintegral=0
+          this.integralS=0
+        }
+      },
+      chooseAgreess(e){
+        this.addressID=e.address_id
+      },
+    //  付款
+      aaaaaa(){
+        this.payMoney()
+      },
+      payMoney(){
+        if (!this.PreName){
+          this.coupon_id=0
+        }
+        if (this.addressID==0){
+          this.$alert('请添加收货地址！', {
+            confirmButtonText: '确定',
+          });
+        } else{
+        this.http.post(this.ports.manage.addorder, qs.stringify({
+          goods_id:this.orderList[0].goods_id,
+          goods_count:1,
+          attribute_detail_id:1,
+          cart_id:0,
+          isuseintegral:this.isuseintegral,
+          coupon_id:this.coupon_id,
+          address_id: this.addressID,
+          pay_way:2,
+          userid:this.authid,
+          token:this.auth,
+        }), res => {
+          if (res.data.result=="1") {
+            this.order_id=res.data.order_id
+            this.payWindow=true
+            timer = setInterval(()=>{
+              this.http.post(this.ports.manage.orderStatus, qs.stringify({
+                order_id:this.order_id,
+                token: this.auth,
+                userid: this.authid
+              }), res => {
+                this.paystatus=res.data.status
+                if (res.data.status!="0") {
+                  window.clearInterval(timer)
+                  clock= window.setInterval(() => {
+                    this.totalTime--
+                    if (this.totalTime < 0) {     //当倒计时小于0时清除定时器
+                      window.clearInterval(clock)
+                      this.$router.push('/order')
+                    }
+                  }, 1000)
+                }else{
+
+                }
+              }, function (error) {
+                this.$notify({
+                  title: "请求失败",
+                });
+              })
+            },2000)
+          }else{
+          }
+        }, function (error) {
+          this.$notify({
+            title: "请求失败",
+          });
+        })
+        }
+      },
+    },
+    mounted(){
+
+    },
+    computed: {
+      defaultActive: function(){
+        return this.$route.path.replace('/', '');
+      }
+    },
+    components:{
+      Footer,Header,VDistpicker,VueQr
+    }
+  }
+</script>
+
+<style scoped lang="scss">
+  .active{
+    display: none;
+  }
+  .block{
+    width: 100%;
+    height: 80px;
+    background: #04110E;
+    line-height: 80px;
+    position: fixed;
+    top: 50px;
+    z-index: 9999;
+    .main{
+      width: 1200px;
+      margin: auto;
+      li{
+        float: left;
+      }
+      li:last-child{
+        margin-left: 100px;
+        color: #00C9A1;
+        font-size: 24px;
+      }
+    }
+  }
+  .product{
+    margin-top: 130px;
+    padding-top: 30px;
+    background: #F5F5F5;
+  }
+  .binding{
+    width: 1200px;
+    margin: auto;
+    background: #fff;
+    padding:20px 35px;
+    >div{
+      color: #757575;
+      font-size: 16px;
+      line-height: 36px;
+      button{
+        float: right;
+        color: #00C9A1;
+      }
+    }
+    >p{
+      text-align: center;
+      color: #7f7f7f;
+      font-size: 20px;
+      line-height: 70px;
+    }
+    table{
+      width: 1126px;
+      tr{
+        border: 1px solid #ccc;
+        th{
+          font-size: 14px;
+          line-height: 40px;
+          color: #a3a3a3;
+          font-weight: 500;
+          text-align: left;
+          padding-left: 10px;
+        }
+        th:first-child{
+          width: 100px;
+        }
+        th:nth-child(2){
+          width: 250px;
+          padding-right: 20px;
+        }
+        td{
+          padding-left: 10px;
+          padding-right: 20px;
+          font-size: 14px;
+          line-height: 30px;
+          color: #757575;
+        }
+        td:last-child{
+          span{
+            color: #E6553D;
+            cursor: pointer;
+          }
+          span:first-child{
+            color: #00C9A1;
+            margin-right: 20px;
+          }
+        }
+      }
+    }
+    .order_list{
+      li{
+        width: 1126px;
+        border: 1px solid #e5e5e5;
+        padding: 20px 30px;
+        margin-bottom: 20px;
+        > div{
+          float: left;
+          margin-right: 25px;
+          img{
+            width: 213px;
+            height: 166px;
+          }
+        };
+        div:nth-child(2){
+          p{
+            color: #a3a3a3;
+            font-size: 15px;
+            line-height: 30px;
+          }
+          p:first-child{
+            color: #474747;
+            font-size: 24px;
+            margin-bottom: 10px !important;
+          }
+          p:last-child{
+            color: #EEAF06;
+            font-size: 24px;
+            margin-top: 60px !important;
+          }
+        }
+        div:last-child{
+          float: right;
+          font-size: 15px;
+          margin-top: 140px;
+          color: #ccc;
+        }
+        div:last-child:hover{
+           color: #E6553D;
+         }
+      }
+    }
+    .order_last{
+      > div{
+        float: left;
+      }
+      >div:first-child{
+        margin-right: 45px;
+        span{
+          display: inline-block;
+          width: 110px;
+          height: 100px;
+          vertical-align: top;
+        }
+        textarea{
+          width: 434px;
+          height: 100px;
+        }
+      }
+      >div:last-child{
+        width: 535px;
+       >div{
+         border-bottom: 1px solid #e5e5e5;
+         span:first-child{
+           display: inline-block;
+           width: 80px;
+           text-align: right;
+           color: #757575;
+           font-size: 16px;
+           line-height: 64px;
+         }
+         .rights{
+           float: right;
+           line-height: 64px;
+           span{
+             width: 20px;
+           }
+         }
+         .youhui{
+           float: right;
+           display: inline-block;
+           padding: 0 10px;
+           height: 24px;
+           line-height: 24px;
+           text-align: center;
+           border-radius: 12px;
+           color: #E53B3B;
+           border: 1px solid #E53B3B;
+           margin-top:20px;
+           margin-right: 10px;
+         }
+         p{
+           text-align: right;
+         }
+         .money{
+           font-size: 24px;
+           color: #E6553D;
+         }
+       }
+        div:last-child,div:nth-child(5){
+          border: 0;
+        }
+        div:last-child{
+          button{
+            width: 145px;
+            height: 47px;
+            border-radius: 3px;
+            background: #E53B3B;
+            color:#fff;
+          }
+          button:last-child{
+            background: #ccc;
+            margin-right: 37px !important;
+          }
+        }
+      }
+    }
+  }
+  /*选择*/
+  .radio{
+    display: inline-block;
+    position: relative;
+    line-height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  .radio input{
+    display: none;
+  }
+  .radio .radio-bg{
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    margin-right: 5px;
+    padding: 0;
+    vertical-align: top;
+    background-image: url('../../assets/img/gou1.png');
+    background-size: 20px 20px;
+    background-repeat:no-repeat;
+    cursor: pointer;
+  }
+  .radio .radio-on{
+    display: none;
+  }
+  .radio input:checked + span.radio-on{
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-image: url('../../assets/img/chooseaddress.png');
+    background-size: 20px 20px;
+    display: inline-block;
+  }
+  .jifen{
+
+    span{
+      width: 45px !important;
+    }
+    .radio .radio-bg{
+      width: 45px;
+      height:24px;
+      background-image: url('../../assets/img/jifen1.png');
+      background-size: 45px 24px;
+    }
+    .radio input:checked + span.radio-on{
+      width: 45px;
+      height: 24px;
+      background-image: url('../../assets/img/jifen2.png');
+      background-size: 45px 24px;
+    }
+  }
+  /*地址*/
+  .addAddress{
+    position: fixed;
+    z-index: 100000;
+    top: 27%;
+   left: 0;
+   right: 0;
+    margin: auto !important;
+    width: 610px;
+    height: 408px;
+    background: white;
+    .add_content{
+      margin-top: 45px;
+      p{
+        margin-bottom: 10px !important;
+        line-height: 37px;
+        color: #757575;
+        div{display: inline-block;margin-left: -5px;}
+        span{
+          display: inline-block;
+          width: 170px;
+          text-align: right;
+          font-size: 14px;
+        }
+        b{
+          padding:0 10px;
+          color: #E53B3B;
+        }
+        input{
+          width: 312px;
+          height: 37px;
+        }
+      }
+      .defaults{
+        margin-left: 195px !important;
+        line-height: 12px;
+        input{
+          width: 12px;
+          height: 12px;
+          line-height: 12px;
+        }
+      }
+    }
+  }
+  .add_title{
+    height:40px;
+    line-height: 40px;
+    background: #EEEEEE;
+    text-align: center;
+    span {
+      float: right;
+      margin-right: 20px !important;
+      cursor: pointer;
+      img{
+        width: 18px;
+      }
+    }
+  }
+  .last{
+    margin-left: 195px;
+    margin-top: 20px;
+  }
+  .add{
+    text-align: center;
+    margin-left: 0;
+    button{
+      width: 160px;
+    }
+  }
+  .moren_address{
+    display: inline-block;
+    width: 54px;
+    height: 18px;
+    text-align: center;
+    line-height: 18px;
+    font-size: 10px;
+    color: #a2a2a2;
+    background: #EEEEEE;
+  }
+  /*支付*/
+  .pay_code{
+    padding:40px 50px 20px;
+    >div{
+      float:left;
+    }
+    >div:first-child{
+      margin-right: 20px;
+      img{
+        width: 205px;
+        height: 205px;
+      }
+    }
+    >div:last-child{
+      p{
+        color: #666666;
+        font-size: 21px;
+        margin-top: 14px !important;
+        margin-bottom: 10px !important;
+        span{
+          color: #E6553D;
+          font-size: 24px;
+        }
+      }
+    }
+  }
+  .youhuijuan{
+    cursor: pointer;
+  }
+  .jinzhi{
+    cursor: not-allowed;
+  }
+</style>
+

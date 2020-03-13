@@ -1,0 +1,111 @@
+//分页器
+.paging {
+  width: 900px;
+  height: 60px;
+  margin-bottom: 20px;
+  margin-left: 40px;
+}
+.pagess {
+  font-size: 14px;
+  font-weight: 500;
+  height: 80px;
+  color: #333;
+  margin: 20px auto 0;
+  //background: #f2f2f2;
+}
+
+.pagelist {
+  font-size: 0;
+  background: #fff;
+  //text-align: center;
+  //margin-left: -100px;
+  height: 50px;
+  line-height: 50px;
+}
+
+.pagelist span {
+  font-size: 14px;
+  text-align: center;
+}
+
+.pagelist .jump {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0px 5px;
+}
+.pagelist .jump62 {
+  display: inline-block;
+  width: 100px;
+  height: 40px;
+  line-height: 40px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0px 5px;
+}
+.pagelist .jump48 {
+  display: inline-block;
+  width: 46px;
+  height: 40px;
+  line-height: 40px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0px 5px;
+}
+
+.pagelist .bgprimary {
+  cursor: default;
+  color: #21A434;
+  //background: #32D2A6;
+  border: 1px solid #21A434;
+}
+
+.jumpinp input {
+  width: 46px;
+  height: 40px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+}
+
+.ellipsis {
+  padding: 0px 8px;
+}
+
+.jumppoint {
+  margin-left: 20px;
+  margin-right: 10px;
+}
+.jumppoint2 {
+  margin: 10px;
+}
+.pagelist .gobtn {
+  font-size: 14px;
+}
+
+.bgprimary {
+  cursor: default;
+  color: #fff;
+  //background: #337ab7;
+  border-color: #21A434;
+}
+.pagelist .jump62.disabled{
+  pointer-events: none;
+  /*background: #ddd;*/
+  opacity: 0.5;
+}

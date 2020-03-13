@@ -1,0 +1,577 @@
+<template>
+  <div>
+    <div class="block">
+      <div class="main clearfix">
+        <nav class="nav clearfix">
+          <ul class="nav_right clearfix">
+            <li><router-link to="/Index"><img src="../../assets/img/logos.png"/></router-link></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <div class="logins">
+      <div class="login_box">
+        <!--登录开始-->
+        <div v-show="loginWindow">
+          <p class="logo">会员登录</p>
+          <div class="login_input">
+            <div :class="{'class-a':userImg,'class-b':!userImg}" @click="clickInputU">
+              <img src="../../assets/img/user1.png" alt="" v-show="!userImg">
+              <img src="../../assets/img/user.png" alt="" v-show="userImg">
+              <input type="text" placeholder="请输入用户名" v-model="login.username">
+            </div>
+            <div  :class="{'class-a':passwordImg,'class-b':!passwordImg}" @click="clickInputP">
+              <img src="../../assets/img/lack.png" alt="" v-show="!passwordImg">
+              <img src="../../assets/img/lacks.png" alt="" v-show="passwordImg">
+              <input type="password" placeholder="请输入密码" v-model="login.password">
+            </div>
+            <p style="text-align: center;color: red;margin-top: 10px !important;">{{logintishi}}</p>
+            <button @click="logins">登录</button>
+            <div class="remember">
+              <span @click="openRetrieve">忘记密码</span>
+              <b></b>
+              <span @click="openRegiste">马上注册</span>
+            </div>
+          </div>
+        </div>
+        <!--会员注册开始-->
+          <div class="login_input" v-show="registeWindow">
+            <h2>会员注册</h2>
+            <div :class="{'class-a':userImg,'class-b':!userImg}" @click="clickInputU">
+              <img src="../../assets/img/user1.png" alt="" v-show="!userImg">
+              <img src="../../assets/img/user.png" alt="" v-show="userImg">
+              <input type="text" placeholder="请输入用户名" v-model="registe.username">
+            </div>
+            <div  :class="{'class-a':passwordImg,'class-b':!passwordImg}" @click="clickInputP">
+              <img src="../../assets/img/gou5.png" alt="" v-show="!passwordImg">
+              <img src="../../assets/img/gou7.png" alt="" v-show="passwordImg">
+              <input type="password" placeholder="请设置密码" v-model="registe.pwdOne">
+            </div>
+            <div :class="{'class-a':phone,'class-b':!phone}" @click="clickInputPh">
+              <img src="../../assets/img/gou2.png" alt="" v-show="!phone" style="width: 16px">
+              <img src="../../assets/img/gou8.png" alt="" v-show="phone" style="width: 16px">
+              <input type="text" placeholder="请输入手机号" v-model="registe.phones">
+            </div>
+            <div class="send_codes clearfix">
+              <div :class="{'class-a':safeImg,'class-b':!safeImg}" @click="clickInputS" class="codes">
+                <img src="../../assets/img/gou4.png" alt="" v-show="!safeImg">
+                <img src="../../assets/img/gou.png" alt="" v-show="safeImg">
+                <input placeholder="请输入验证码"  v-model="registe.code"/>
+              </div>
+              <button
+                class="sends" @click="getCode">
+                {{content}}
+              </button>
+            </div>
+            <div>
+              <label  class="radio">
+                <span class="radio-bg"></span>
+                <input type="checkbox" name="" @click="chooseAgree($event)"/>
+                <span class="radio-on"></span>
+              </label>同意并接受《逸星龙用户协议》
+            </div>
+            <p style="text-align: center;color: red">{{tishi}}</p>
+            <button @click="registeUser">确定</button>
+            <p class="registe">已有账号，<span @click="openLogin">马上登录</span></p>
+          </div>
+        <!--找回密码-->
+        <div class="login_input" v-show="retrieveWindow">
+          <h2 style="color: #666666">找回密码</h2>
+          <div :class="{'class-a':phone,'class-b':!phone}" @click="clickInputPh">
+            <img src="../../assets/img/gou2.png" alt="" v-show="!phone" style="width: 16px">
+            <img src="../../assets/img/gou8.png" alt="" v-show="phone" style="width: 16px">
+            <input type="text" placeholder="请输入手机号" v-model="retrieve.phones">
+          </div>
+          <div class="send_codes clearfix">
+            <div :class="{'class-a':safeImg,'class-b':!safeImg}" @click="clickInputS" class="codes">
+              <img src="../../assets/img/gou4.png" alt="" v-show="!safeImg">
+              <img src="../../assets/img/gou.png" alt="" v-show="safeImg">
+              <input placeholder="请输入验证码"  v-model="retrieve.code"/>
+            </div>
+            <button
+              class="sends" @click="getCodes">
+              {{contents}}
+            </button>
+          </div>
+          <div  :class="{'class-a':passwordImg,'class-b':!passwordImg}" @click="clickInputP">
+            <img src="../../assets/img/gou5.png" alt="" v-show="!passwordImg">
+            <img src="../../assets/img/gou7.png" alt="" v-show="passwordImg">
+            <input type="password" placeholder="请输入新密码" v-model="retrieve.pwdOne">
+          </div>
+
+          <div :class="{'class-a':userImg,'class-b':!userImg}" @click="clickInputU">
+            <img src="../../assets/img/gou5.png" alt="" v-show="!userImg">
+            <img src="../../assets/img/gou7.png" alt="" v-show="userImg">
+            <input type="password" placeholder="请确认密码" v-model="retrieve.pwdTwo">
+          </div>
+          <p style="text-align: center;color: red">{{tishi}}</p>
+          <button @click="retrieveUser" style="margin-top: 10px !important;">确定</button>
+          <p class="registe">放弃找回，<span @click="openLogin">马上登录</span></p>
+        </div>
+
+      </div>
+    </div>
+    <div class="footer">
+      <ul class="footer_content clearfix">
+        <li>
+          <p><img src="../../assets/img/phone1.png" alt=""></p>
+          <div>18984114389</div>
+        </li>
+        <li>
+          <p><img src="../../assets/img/mail1.png" alt=""></p>
+          <div>732780456@qq.com</div>
+        </li>
+        <li>
+          <p><img src="../../assets/img/address1.png" alt=""></p>
+          <div>贵阳市云岩区中天未来方舟F2组团1栋8楼7号</div>
+        </li>
+        <li>
+          <p><img src="../../assets/img/weixin1.png" alt=""></p>
+          <div>18984114389</div>
+        </li>
+        <li>
+          <p><img src="../../assets/img/qq11.png" alt=""></p>
+          <div>732780456</div>
+        </li>
+      </ul>
+      <div class="copy">
+        <p>Copyright © 2018 贵阳逸星龙软件开发有限公司 版权所有</p>
+        <p>技术支持：网页版 | 手机版 | 管理登录 | 黔ICP备18004086号-1</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import qs from 'qs'   //qs库-->作用是格式化数据
+  import CryptoJS from "crypto-js"
+  var reg = /^1(3[0-9]|4[57]|5[0-9]|66|7[135678]|8[0-9]|9[89])[0-9]{8}$/;
+    export default {
+        name: "login",
+        data(){
+          return{
+            userImg:false,
+            passwordImg:false,
+            passwordImg1:false,
+            safeImg:false,
+            loginWindow:true,
+            registeWindow:false,
+            retrieveWindow:false,
+            checked:'',
+            tishi:'',
+            logintishi:'',
+            checkedAgree:'',
+            login:{
+              username:'',
+              password:'',
+            },
+            content:'发送验证码',
+            contents:'发送验证码',
+            totalTimes: 60,
+            totalTime: 60,
+            phone:false,
+            psid:'',
+            registe:{
+              username:'',
+              pwdOne:'',
+              pwdTwo:'',
+              code:'',
+              phones:'',
+            },
+            psids:'',
+            retrieve:{
+              username:'',
+              pwdOne:'',
+              pwdTwo:'',
+              code:'',
+              phones:'',
+            },
+          }
+        },
+      watch:{
+        $route(to,from){
+        }
+      },
+      created(){
+        window.localStorage.setItem('loginstate', this.$route.query.state)
+        if (window.localStorage.getItem('loginstate')==1){
+          this.openLogin()
+        }else if(window.localStorage.getItem('loginstate')==2){
+          this.openRegiste()
+        }else{
+          this.openRetrieve()
+        }
+        //判断是否记住密码
+        if (localStorage.getItem("rememberPsw") == 'true') {
+          this.getCookie();
+        }
+      },
+      mounted(){
+        this.keyupSubmit()
+      },
+      methods: {
+        openRetrieve(){
+          this.loginWindow=false
+          this.registeWindow=false
+          this.retrieveWindow=true
+        },
+        openLogin(){
+          this.loginWindow=true
+          this.registeWindow=false
+          this.retrieveWindow=false
+          window.localStorage.setItem('loginstate', 1)
+        },
+        openRegiste(){
+          this.loginWindow=false
+          this.registeWindow=true
+          this.retrieveWindow=false
+          window.localStorage.setItem('loginstate', 2)
+        },
+        keyupSubmit() {
+          document.onkeydown = e => {
+            let _key = window.event.keyCode;
+            if (_key === 13) {
+              this.logins()
+            }
+          }
+        },
+        //图标切换开始
+        clickInputU(){
+          this.userImg=true
+          if(this.phone===true){this.phone=false}
+          if(this.passwordImg===true){this.passwordImg=false}
+          if(this.passwordImg1===true){this.passwordImg1=false}
+          if(this.safeImg===true){this.safeImg=false}
+        },
+        clickInputPh(){
+          this.phone=true
+          if (this.userImg===true){this.userImg=false}
+          if(this.passwordImg===true){this.passwordImg=false}
+          if(this.passwordImg1===true){this.passwordImg1=false}
+          if(this.safeImg===true){this.safeImg=false}
+        },
+        clickInputP(){
+          this.passwordImg=true
+          if(this.phone===true){this.phone=false}
+          if (this.userImg===true){this.userImg=false}
+          if (this.passwordImg1===true){this.passwordImg1=false}
+          if (this.safeImg===true){this.safeImg=false}
+        },
+        clickInputS(){
+          this.safeImg=true
+          if(this.phone===true){this.phone=false}
+          if (this.userImg===true){this.userImg=false}
+          if (this.passwordImg1===true){this.passwordImg1=false}
+          if (this.passwordImg===true){this.passwordImg=false}
+        },
+        clickInputP1(){
+          this.passwordImg1=true
+          if(this.phone===true){this.phone=false}
+          if (this.userImg===true){this.userImg=false}
+          if (this.passwordImg===true){this.passwordImg=false}
+          if (this.safeImg===true){this.safeImg=false}
+        },
+        //图标切换结束
+        //登录
+        rememberUser(e){
+          this.checked=e.target.checked
+        },
+        logins(){
+          if (this.login.username==''){
+            this.logintishi='请输入用户名'
+          }else if (this.login.password==''){
+            this.logintishi='请输入密码'
+          }else {
+            this.http.post(this.ports.manage.shopUserLogin, qs.stringify({
+              name: this.login.username,
+              pwd: this.login.password
+            }), res => {
+              this.logintishi=res.data.message
+              if (res.data.message === "登录成功") {
+                // 返回正确的处理
+                window.localStorage.setItem('token', res.data.token)
+                window.localStorage.setItem('userid', res.data.userid)
+                localStorage.setItem("rememberPsw", true);
+                this.setCookie(this.login.username, this.login.password, 7);
+                // this.$router.push('/Index')
+                this.$router.go(-1)
+              } else {
+                // 返回错误的处理
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+
+          }
+        },
+        //注册
+        chooseAgree(e){
+          this.checkedAgree=e.target.checked
+        },
+        getCode(){
+          if (this.registe.username==='') {
+            this.tishi='请输入用户名'
+          }else if (!this.registe.phones) {//未输入手机号
+            this.tishi='请输入手机号码'
+          } else if (!reg.test(this.registe.phones)) {//手机号不合法
+            this.tishi='手机号错误'
+          }else {
+            this.http.post(this.ports.manage.shopUserRegistSendSms, qs.stringify({
+              phone:this.registe.phones,
+            }), res => {
+              console.log(res)
+              if (res.data.result==="1") {
+                this.psid=res.data.psid
+                this.content = this.totalTime + 's后重新发送' //这里解决60秒不见了的问题
+                let clock = window.setInterval(() => {
+                  this.totalTime--
+                  this.content = this.totalTime + 's后重新发送'
+                  if (this.totalTime < 0) {     //当倒计时小于0时清除定时器
+                    window.clearInterval(clock)
+                    this.content = '重新发送验证码'
+                    this.totalTime = 60
+                  }
+                }, 1000)
+              }else{
+                this.tishi=res.data.message
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          }
+        },
+        registeUser(){
+          if (this.registe.username=='') {
+            this.tishi='请输入用户名'
+          }else if (this.registe.phones=='') {
+            this.tishi='请输入手机号'
+          } else if (!reg.test(this.registe.phones)) {//手机号不合法
+            this.tishi='手机号错误'
+          } else if (this.registe.code=='') {
+            this.tishi='请输入验证码'
+          }else if (this.registe.pwdOne=='') {
+            this.tishi='请输入密码'
+          }else if (!this.checkedAgree){
+            this.tishi='请勾选阅读协议'
+          }else{
+            this.http.post(this.ports.manage.shopUserRegist, qs.stringify({
+              name:this.registe.username,psid:this.psid,pwd:this.registe.pwdOne,code:this.registe.code,phone:this.registe.phones
+            }), res => {
+              if (res.data.message=='注册成功'){
+                this.tishi='注册成功，即将登录'
+                this.login.username=this.registe.username
+                this.login.password=this.registe.pwdOne
+                var a=window.setInterval(() => {//定时器
+                  this.logins()
+                  window.clearInterval(a)
+                }, 2000)
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          }
+        },
+        //找回密码
+        getCodes(){
+          if (!this.retrieve.phones) {//未输入手机号
+            this.tishi='请输入手机号码'
+          } else if (!reg.test(this.retrieve.phones)) {//手机号不合法
+            this.tishi='手机号错误'
+          }else {
+            this.http.post(this.ports.manage.shopUserFindPwdSendSms, qs.stringify({
+              phone:this.retrieve.phones,
+            }), res => {
+              if (res.data.result==="1") {
+                this.psids=res.data.psid
+                this.contents = this.totalTimes + 's后重新发送' //这里解决60秒不见了的问题
+                let clock = window.setInterval(() => {
+                  this.totalTimes--
+                  this.contents = this.totalTimes + 's后重新发送'
+                  if (this.totalTimes < 0) {     //当倒计时小于0时清除定时器
+                    window.clearInterval(clock)
+                    this.contents = '重新发送验证码'
+                    this.totalTimes = 60
+                  }
+                }, 1000)
+              }else{
+                this.tishi=res.data.message
+              }
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          }
+        },
+        retrieveUser(){
+          if (this.retrieve.phones=='') {
+            this.tishi='请输入手机号'
+          }else if (!reg.test(this.retrieve.phones)) {//手机号不合法
+            this.tishi='手机号错误'
+          }else if (this.retrieve.code=='') {
+            this.tishi='请输入验证码'
+          }else if (this.retrieve.pwdOne=='') {
+            this.tishi='请输入新密码'
+            }else if (this.retrieve.pwdTwo=='') {
+            this.tishi='请确认密码'
+          }else if (this.retrieve.pwdTwo!=this.retrieve.pwdOne) {
+            this.tishi='密码不一致'
+          }else{
+            this.http.post(this.ports.manage.shopUserFindPwd, qs.stringify({
+              psid:this.psids,pwdone:this.retrieve.pwdOne,pwdtwo:this.retrieve.pwdTwo,code:this.retrieve.code,phone:this.retrieve.phones
+            }), res => {
+              this.tishi=res.data.message
+            }, function (error) {
+              this.$notify({
+                title: "请求失败",
+              });
+            })
+          }
+        },
+        //设置cookie
+        setCookie(portId, psw, exdays) {
+          // Encrypt，加密账号密码
+          var cipherPortId = CryptoJS.AES.encrypt(
+            portId+'',
+            "secretkey123"
+          ).toString();
+          var cipherPsw = CryptoJS.AES.encrypt(psw+'', "secretkey123").toString();
+          console.log(cipherPortId+'/'+cipherPsw)//打印一下看看有没有加密成功
+
+          var exdate = new Date(); //获取时间
+          exdate.setTime(exdate.getTime() + 24 * 60 * 60 * 1000 * exdays); //保存的天数
+          //字符串拼接cookie，为什么这里用了==，因为加密后的字符串也有个=号，影响下面getcookie的字符串切割，你也可以使用更炫酷的符号。
+          window.document.cookie =
+            "currentPortId" +
+            "==" +
+            cipherPortId +
+            ";path=/;expires=" +
+            exdate.toGMTString();
+          window.document.cookie =
+            "password" +
+            "==" +
+            cipherPsw +
+            ";path=/;expires=" +
+            exdate.toGMTString();
+        },
+        //读取cookie
+        getCookie: function() {
+          if (document.cookie.length>0) {
+            var arr = document.cookie.split("; "); //这里显示的格式请根据自己的代码更改
+            for (var i = 0; i<arr.length; i++) {
+              var arr2 = arr[i].split("=="); //根据==切割
+              //判断查找相对应的值
+              if (arr2[0] == "currentPortId") {
+                // Decrypt，将解密后的内容赋值给账号
+                var bytes = CryptoJS.AES.decrypt(arr2[1], "secretkey123");
+                this.login.username = bytes.toString(CryptoJS.enc.Utf8);
+              } else if (arr2[0] == "password") {
+                // Decrypt，将解密后的内容赋值给密码
+                var bytes = CryptoJS.AES.decrypt(arr2[1], "secretkey123");
+                this.login.password= bytes.toString(CryptoJS.enc.Utf8);
+              }
+            }
+          }
+        },
+      },
+    }
+</script>
+
+<style scoped lang="scss">
+  @import "../../page/style/main";
+  @import "../../page/style/login";
+  @import "../../page/style/common";
+  .block{
+    width: 100%;
+    height: 8vh;
+    background: #04110E;
+    line-height: 8vh;
+    .main{
+      width: 1200px;
+      margin: auto;
+      li{
+        float: left;
+      }
+      li:last-child{
+        margin-left: 100px;
+        color: #00C9A1;
+        font-size: 24px;
+      }
+    }
+  }
+  .footer{width: 100%;height: 28vh;background: #F5F5F5;text-align: center;color: #a2a2a2;font-size: 12px;padding-top:18px}
+  .footer_content{
+    width: 1200px;
+    margin: auto !important;
+    li{
+      float: left;
+      width: 20%;
+      text-align: center;
+      color: #a2a2a2;
+      p{
+        width: 27px;
+        margin: auto !important;
+        border-bottom: 2px solid #a2a2a2;
+        img{
+          margin-bottom: 10px;
+        }
+      }
+      div{
+        margin-top: 10px;
+        font-size: 16px;
+        line-height: 30px;
+        color: #a2a2a2;
+      }
+    }
+  }
+  .copy{
+    padding-top: 10px;
+    background: #F5F5F5;
+    P{
+      color: #a2a2a2;
+      font-size: 16px;
+      line-height: 36px;
+    }
+  }
+  /*选择*/
+  .radio{
+    display: inline-block;
+    position: relative;
+    line-height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  .radio input{
+    display: none;
+  }
+  .radio .radio-bg{
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    margin-right: 5px;
+    padding: 0;
+    vertical-align: top;
+    background-image: url('../../assets/img/gou1.png');
+    background-size: 20px 20px;
+    cursor: pointer;
+  }
+  .radio .radio-on{
+    display: none;
+  }
+  .radio input:checked + span.radio-on{
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-image: url('../../assets/img/gou9.png');
+    background-size: 20px 20px;
+    display: inline-block;
+  }
+</style>
